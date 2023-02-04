@@ -1,15 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
+import { useContext } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button } from '@rneui/themed'; // react-native-element 
+import { Button } from '@rneui/themed'
 
-export default function Home({ navigation }) {
+import AuthContext from '../auth/context';
+
+export default function Setting({navigation, route}) {
+  const { signOut } = useContext(AuthContext)
+
   return (
     <View style={styles.container}>
-      <Text>Home</Text>
+      <Text>Profile</Text>
       <Button
-        title="About"
+        title="Sign Out"
         icon={{
-          name: 'home',
+          name: 'sign-out',
           type: 'font-awesome',
           size: 15,
           color: 'white',
@@ -27,9 +32,7 @@ export default function Home({ navigation }) {
           marginHorizontal: 50,
           marginVertical: 10,
         }}
-        onPress={() =>
-          navigation.navigate('About', {code: 'NMLINX'})
-        }
+        onPress={() => signOut()}
       />
       <StatusBar style="auto" />
     </View>
