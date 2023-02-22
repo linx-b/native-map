@@ -1,12 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
 
-export default function About({navigation, route}) {
+export default function NotFound({navigation, route}) {
   return (
     <View style={styles.container}>
-      <Text>About</Text>
-      <Text>Code : Admin</Text>
-      <StatusBar style="auto" />
+      <Image
+        source={require('src/images/404.png')}
+        style={{width: 325, height: 275}}
+      />
     </View>
   );
 }

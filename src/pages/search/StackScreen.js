@@ -7,12 +7,12 @@ import SearchScreen from './SearchScreen'
 const SearchStack = createNativeStackNavigator();
 
 export default function SearchStackScreen () {
-    return (
-        <SearchStack.Navigator  
-        screenOptions={{
-            headerShown: false,
-        }}>
-            <SearchStack.Screen name="_Search" component={SearchScreen} />
-        </SearchStack.Navigator>
-    )
+  return (
+    <SearchStack.Navigator  
+      screenOptions={{
+        headerShown: false,
+      }}>
+        <SearchStack.Screen name="_Search" component={SearchScreen} />
+    </SearchStack.Navigator>
+  )
 }

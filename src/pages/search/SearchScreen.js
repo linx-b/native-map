@@ -6,10 +6,12 @@ import {
   Text, 
   View, 
   Image, 
-  ScrollView,
-  FlatList, 
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
 import { SearchBar, Button, Divider, Overlay,  } from '@rneui/themed'
+
+import Modal from 'components/SearchModal'
 
 const DATA = [
   {
@@ -29,38 +31,41 @@ const DATA = [
   },
 ];
 
-function Card({title}) {
+function Card({navigation, title}) {
   return (
-    <View style={styles.item}>
-      <Image
-        style={styles.image}
-        source={require('../../images/building.png')}
-      />
-      <Text style={[styles.title, styles.description]}>{title}</Text>
-    </View>
+    <TouchableOpacity onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})}>
+      <View style={styles.item}>
+        <Image
+          style={styles.image}
+          source={require('../../images/building.png')}
+        />
+        <Text style={[styles.title, styles.description]}>{title}</Text>
+      </View>
+    </TouchableOpacity>
   )
 }
 
 export default function SearchScreen({navigation, route}) {
   const [search, setSearch] = useState("");
   const [item, setItem] = useState([])
-  // const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState([false])
   const updateSearch = (search) => {
     setSearch(search);
   };
   const searching = (data) => {
     data ? setItem(DATA) : setItem([])
   }
-  // const toggleOverlay = () => {
-  //   setVisible(!visible);
-  // };
+
   return (
-    <SafeAreaView style={styles.container}>
-      {/* <StatusBar style="auto" /> */}
+    <View style={styles.container}>
+      <StatusBar style="auto" />
       <View
-        style={{marginTop: 40}}
+        style={styles.searchContainer}
       >
         <SearchBar
+          containerStyle={{
+            flex: 1,
+          }}
           platform="android"
           placeholderTextColor="#888"
           cancelButtonTitle="Cancel"
@@ -69,6 +74,19 @@ export default function SearchScreen({navigation, route}) {
           onSubmitEditing={() => searching(search)}
           // onClear={() => setItem([])}
           value={search}
+        />
+        <Button
+          color={'#BA94D1'}
+          containerStyle={{
+            padding: 5,
+          }}
+          radius='md'
+          icon={{
+            name: 'tune',
+            size: 25,
+            color: 'white',
+          }}
+          onPress={() => setVisible(true)}
         />
       </View>
       <Divider />
@@ -79,26 +97,6 @@ export default function SearchScreen({navigation, route}) {
           alignItems: 'flex-start',
         }}
       >
-        {/* <Button
-          color={'#BA94D1'}
-          style={{
-            padding: 15,
-          }}
-          icon={{
-            name: 'tune',
-            size: 30,
-            color: 'white',
-          }}
-          onPress={toggleOverlay}
-        /> */}
-        {/* <Overlay isVisible={visible} onBackdropPress={toggleOverlay}>
-          <View style={{ flex: 0.5, width: '80%'}}>
-            <Text>Hello!</Text>
-            <Text>
-              Welcome to React Native Elements
-            </Text>
-          </View>
-        </Overlay> */}
       </View>
       {
         item.length === 0 ? (
@@ -120,34 +118,15 @@ export default function SearchScreen({navigation, route}) {
           >
             <FlatList
               data={DATA}
-              renderItem={({item}) => <Card title={item.title} />}
+              renderItem={({item}) => <Card title={item.title} navigation={navigation} />}
               keyExtractor={item => item.id}
             />
           </View>
         )
       }
-      {/* <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Image
-          source={require('../../images/search.png')}
-          style={{width: 175, height: 175}}
-        />
-      </View> */}
-      {/* <View
-        style={[styles.container,]}
-      >
-        <FlatList
-          data={DATA}
-          renderItem={({item}) => <Card title={item.title} />}
-          keyExtractor={item => item.id}
-        />
-      </View> */}
-    </SafeAreaView>
+      <Modal isVisible={visible} onClose={setVisible}></Modal>
+      <StatusBar style="auto" />
+    </View>
   )
 }
 
@@ -157,6 +136,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     // alignItems: 'center',
     // justifyContent: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 40,
+    padding: 5,
   },
   item: {
     flexDirection: 'row',

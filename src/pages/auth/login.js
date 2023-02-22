@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { 
   StyleSheet,
@@ -13,7 +13,11 @@ import { Button, Divider } from '@rneui/themed'
 import Contex from './context'
 
 export default function Login({navigation, route}) {
-  const { signIn, signInAsAdmin } = useContext(Contex)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [validate, setValidate] = useState(false)
+  const { signIn } = useContext(Contex)
+
   return (
     <View style={styles.container}>
       <View
@@ -24,23 +28,29 @@ export default function Login({navigation, route}) {
         }}
       >
         <Image
-          source={require('../../images/search.png')}
-          style={{width: 150, height: 150}}
+          resizeMode="contain"
+          source={require('src/images/logo.png')}
+          style={{width: 225, height: 175}}
         />
       </View>
       <View style={[{ paddingHorizontal: 30}]}>
         <TextInput
           style={styles.input}
           placeholder='Username'
-          // onChangeText={onChangeText}
-          // value={text}
+          onChangeText={newText  => setEmail(newText)}
+          value={email}
+          keyboardType="email-address"
         />
         <TextInput
           style={[styles.input, {marginBottom: 20}]}
           placeholder='Password'
-          // onChangeText={onChangeText}
-          // value={text}
+          secureTextEntry={true}
+          onChangeText={newText=> setPassword(newText)}
+          value={password}
         />
+        {
+          validate && <Text style={{textAlign: 'center', color: 'red', marginBottom: 10}}>Email or password incorrect!</Text>
+        }
         <Divider width={1}/>
         <Button
           title="Sign In"
@@ -64,7 +74,10 @@ export default function Login({navigation, route}) {
             marginVertical: 10,
             alignSelf: 'center'
           }}
-          onPress={() => signIn({ username: 'user', password: 'password' })}
+          onPress={async () => {
+            const res = await signIn({ username: email, password: password })
+            setValidate(!res)
+          }}
         />
         <Text style={{textAlign: 'center'}}>OR</Text>
         <Button
@@ -109,5 +122,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 12,
     paddingHorizontal: 15,
+    borderColor: "gray",
   }
 });

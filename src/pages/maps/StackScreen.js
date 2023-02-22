@@ -13,7 +13,17 @@ const MapStack = createNativeStackNavigator();
 
 export default function MapStackScreen ({navigation}) {
   return (
-    <MapStack.Navigator>
+    <MapStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#645CBB',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
       <MapStack.Screen name="Main-map" component={MainMapScreen} />
       <MapStack.Screen name="Sub-map" component={SubMapScreen} />
       <MapStack.Screen name="Detail" component={DetailScreen} />

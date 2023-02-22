@@ -3,7 +3,11 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Path, G, Image } from "react-native-svg";
 import SvgPanZoom, { SvgPanZoomElement } from 'react-native-svg-pan-zoom';
 
-const SVGComponent = ({navigation, route}) => {
+import _buildings from 'util/building'
+import _markers  from 'util/markers'
+
+const SubMap = ({navigation, fid, data}) => {
+  console.log("data =>", data)
   const handle = ({ nativeEvent }) => {
     console.log(nativeEvent.locationX, nativeEvent.locationY)
   }
@@ -17,7 +21,7 @@ const SVGComponent = ({navigation, route}) => {
         initialZoom   = {1.2}
         // onZoom        = {(zoom) => { console.log('onZoom:' + zoom) }}
         // canvasStyle   = {{ backgroundColor: 'yellow' }}
-        viewStyle     = {{ backgroundColor: '#F5EFE6'  }}
+        viewStyle     = {{ backgroundColor: '#FFFBF5'  }}
       >
         <Svg
           width="540"
@@ -58,24 +62,52 @@ const SVGComponent = ({navigation, route}) => {
             fill="#E4D8E6"
           />
           <SvgPanZoomElement>
-            <G onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})}>
+            {
+              data.map((building, index) => {
+                const { marker } = building
+
+                return <G key={index} onPress={() =>navigation.navigate('Detail', {fid: fid, data: building})}>
+                  <Image
+                    // onPress={() => alert('Press on Building')}
+                    x={building.x}
+                    y={building.y}
+                    width="200"
+                    height="200"
+                    // preserveAspectRatio="xMidYMid slice"
+                    href={_buildings[building.name]}
+                  ></Image>
+                  { marker && <Image
+                      // onPress={() => alert('Press on kenny')}
+                      x={building.mx}
+                      y={building.my}
+                      width="200"
+                      height="200"
+                      // preserveAspectRatio="xMidYMid slice"
+                      href={_markers[marker?.msrc]}
+                    ></Image>
+                  }
+                </G>
+              })
+            }
+            {/* <G onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})}>
               <Image
                 // onPress={() => alert('Press on Building')}
                 x="500"
                 y="1000"
                 width="200"
+                resizeMode="contain"
                 height="200"
-                preserveAspectRatio="xMidYMid slice"
-                href={require('../images/building.png')}
+                // preserveAspectRatio="xMidYMid slice"
+                href={require('src/images/building/bio.png')}
               ></Image>
               <Image
               // onPress={() => alert('Press on kenny')}
-                x="550"
-                y="1000"
-                width="100"
-                height="100"
-                preserveAspectRatio="xMidYMid slice"
-                href={require('../images/kenny.jpg')}
+                x="500"
+                y="950"
+                width="175"
+                height="175"
+                // preserveAspectRatio="xMidYMid slice"
+                href={require('src/images/marker/food.png')}
               ></Image>
             </G>
             <G onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})} >
@@ -85,23 +117,23 @@ const SVGComponent = ({navigation, route}) => {
                 y="1000"
                 width="200"
                 height="200"
-                preserveAspectRatio="xMidYMid slice"
-                href={require('../images/building.png')}
+                // preserveAspectRatio="xMidYMid slice"
+                href={require('src/images/building/comp.png')}
               ></Image>
               <Image
               // onPress={() => alert('Press on kenny')}
-                x="750"
-                y="1000"
-                width="100"
-                height="100"
+                x="700"
+                y="950"
+                width="175"
+                height="175"
                 preserveAspectRatio="xMidYMid slice"
-                href={require('../images/kenny.jpg')}
+                href={require('src/images/marker/cafe.png')}
               ></Image>
-            </G>
+            </G> */}
           </SvgPanZoomElement>
         </Svg>
       </SvgPanZoom>
     </View>
   )
 }
-export default SVGComponent;
+export default SubMap;

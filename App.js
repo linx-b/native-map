@@ -7,6 +7,17 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useReducer, useEffect, useMemo } from 'react'
 import * as SecureStore from 'expo-secure-store'
+import { 
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  getDoc
+} from "firebase/firestore";
+import db from 'database/firebase'
+
 
 import AuthContext  from './src/pages/auth/context'
 
@@ -17,7 +28,8 @@ import ProfileStackScreen from './src/pages/profile/ProfileScreen'
 import LoginScreen from './src/pages/auth/login'
 import RegisterScreen from './src/pages/auth/register'
 
-import AdminStackScreen from './src/pages/admin/admin'
+import UserStackScreen from './src/pages/admin/UserStackScreen'
+import ManageMapStackScreen from './src/pages/admin/ManageMapStackScreen'
 import SettingScreen from './src/pages/admin/setting'
 
 const Stack = createNativeStackNavigator();
@@ -38,15 +50,8 @@ export default function App() {
             ...prevState,
             isSignout: false,
             userToken: action.token,
-            role: 'USER'
+            role: action.role
           };
-        case 'SIGN_IN_AS_ADMIN':
-        return {
-          ...prevState,
-          isSignout: false,
-          userToken: action.token,
-          role: 'ADMIN'
-        };
         case 'SIGN_OUT':
           return {
             ...prevState,
@@ -87,15 +92,28 @@ export default function App() {
 
   const authContext = useMemo(
     () => ({
-      signIn: async (data) => {
+      signIn: async ({username, password}) => {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `SecureStore`
         // In the example, we'll use a dummy token
-        dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });
-      },
-      signInAsAdmin: () => {
-        dispatch({ type: 'SIGN_IN_AS_ADMIN', token: 'dummy-auth-token'})
+        //username.trim()
+        // ====================================================
+        const _query = query(collection(db, 'users'), 
+          where("email", "==", username.trim()),
+          where("password", "==", password.trim())
+        )
+        const querySnapshot = await getDocs(_query)
+        const [user] = querySnapshot.docs
+          .map((doc) => ({...doc.data(), id:doc.id }))
+
+        if(!user) {
+          return false
+        }
+
+        dispatch({ type: 'SIGN_IN', token: user.id, role: user.role,})
+        
+        return true
       },
       signOut: () => dispatch({ type: 'SIGN_OUT' }),
       signUp: async (data) => {
@@ -162,7 +180,7 @@ function UserTabStack() {
 
           return <Ionicons name={iconName} size={size + 5} color={color} />;
         },
-        tabBarActiveTintColor: '#BA94D1',
+        tabBarActiveTintColor: '#645CBB',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarStyle: { height: 65 },
@@ -195,15 +213,15 @@ function AdminTabStack() {
 
           return <Ionicons name={iconName} size={size + 5} color={color} />;
         },
-        tabBarActiveTintColor: '#BA94D1',
+        tabBarActiveTintColor: '#645CBB',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarStyle: { height: 65 },
         keyboardHidesTabBar: true,
       })}
     >
-      <Tab.Screen name="User" component={AdminStackScreen}></Tab.Screen>
-      <Tab.Screen name="Map" component={AdminStackScreen}></Tab.Screen>
+      <Tab.Screen name="User" component={UserStackScreen}></Tab.Screen>
+      <Tab.Screen name="Map" component={ManageMapStackScreen}></Tab.Screen>
       <Tab.Screen name="Setting" component={SettingScreen}/>
     </Tab.Navigator>
   )
