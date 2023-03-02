@@ -1,15 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar';
 import { 
   StyleSheet, 
-  SafeAreaView, 
   Text, 
   View, 
   Image, 
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import { SearchBar, Button, Divider, Overlay,  } from '@rneui/themed'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { SearchBar, Button, Divider } from '@rneui/themed'
+import { 
+  collection,
+  collectionGroup,
+  orderBy, 
+  startAt, 
+  endAt,
+  getDocs,
+  query,
+  where,
+  doc,
+  getDoc,
+  QuerySnapshot
+} from "firebase/firestore"
+import db from 'database/firebase'
+
+import buildings from 'util/building'
 
 import Modal from 'components/SearchModal'
 
@@ -31,30 +47,135 @@ const DATA = [
   },
 ];
 
-function Card({navigation, title}) {
+function Card({navigation, building}) {
+  const { data } = building
   return (
-    <TouchableOpacity onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})}>
+    <TouchableOpacity onPress={() =>navigation.navigate('Detail', building)}>
       <View style={styles.item}>
         <Image
+          resizeMode="contain"
           style={styles.image}
-          source={require('../../images/building.png')}
+          source={buildings[data?.src]}
         />
-        <Text style={[styles.title, styles.description]}>{title}</Text>
+        <Text style={[styles.title, styles.description]}>{data?.name}</Text>
       </View>
     </TouchableOpacity>
   )
 }
 
+function getFaculty() {
+  const _query = query(collection(db, 'maps'))
+  return getDocs(_query)
+}
+
+async function findByName(name) {
+  const _query1 = query(collectionGroup(db, 'buildings'), orderBy('name'), startAt(name), endAt(name+'\uf8ff'))
+  // const _query2 = query(collectionGroup(db, 'buildings'), orderBy('ename'), startAt(name), endAt(name+'\uf8ff'))
+  const _name = await getDocs(_query1)
+  // const _ename = await getDocs(_query2)
+  return [..._name.docs]
+}
+
+function findByFaculty(fid) {
+  const _query = query(collection(db, 'maps', fid, 'buildings'))
+  return getDocs(_query)
+}
+
+async function getMapping(bid) {
+  const uid = await AsyncStorage.getItem('uid')
+  const _query = query(collection(db, "mapping"), where("bid", "==", bid), where("uid", "==", uid))
+  return getDocs(_query)
+}
+
 export default function SearchScreen({navigation, route}) {
   const [search, setSearch] = useState("");
-  const [item, setItem] = useState([])
+  const [items, setItems] = useState([])
+  const [faculties, setFaculties] = useState([])
   const [visible, setVisible] = useState([false])
-  const updateSearch = (search) => {
-    setSearch(search);
-  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setItems([])
+      setSearch('')
+    })
+    return unsubscribe
+  }, [navigation])
+
+  useEffect(() => {
+    getFaculty().then(querySnapshot => {
+      const data = []
+      querySnapshot.forEach(doc => data.push({fid: doc.id, name: doc.data()?.name}))
+      console.log('faculties =>', data)
+      setFaculties(data)
+    })
+  }, [])
+
   const searching = (data) => {
-    data ? setItem(DATA) : setItem([])
+    findByName(data).then(async (docs) => {
+      const list = []
+      for(const doc of docs) {
+        const mapping = await getMapping(doc.id)
+        list.push({
+          fid: doc.ref
+                  .parent
+                  .parent
+                  .id,
+          data: {
+            id: doc.id,
+            ...doc.data(),
+            marker: mapping.docs[0] ? {
+              id: mapping.docs[0].id,
+              ...mapping.docs[0].data()
+            } : null
+          }
+        })
+      
+      }
+      setItems(list)
+    })
+    // data ? setItem(DATA) : setItem([])
+    
+    // findByName(data).then(doc => {
+    //   doc.forEach(doc => {
+        
+    //   })
+    // })
   }
+
+  const selectHandler = (keyword) => {
+    findByFaculty(keyword).then(async buildings => {
+      const list = []
+      for(const doc of buildings.docs) {
+        console.log('doc =>', doc.id, doc.data())
+        const mapping = await getMapping(doc.id)
+        list.push({
+          fid: doc.ref
+                  .parent
+                  .parent
+                  .id,
+          data: {
+            id: doc.id,
+            ...doc.data(),
+            marker: mapping.docs[0] ? {
+              id: mapping.docs[0].id,
+              ...mapping.docs[0].data()
+            } : null
+          }
+        })
+      }
+      setItems(list)
+    })
+    setVisible(false)
+  }
+
+  // const goToDetail = async (building) => {
+  //   const mappings = await getMapping(building.id)
+  //   const _building = {
+  //     ...building,
+  //     marker: mappings.empty() ? null : mappings.docs[0]
+  //   }
+  //   navigation.navigate('Detail', { fid: building.fid, data: _building}) 
+  // }
 
   return (
     <View style={styles.container}>
@@ -70,9 +191,9 @@ export default function SearchScreen({navigation, route}) {
           placeholderTextColor="#888"
           cancelButtonTitle="Cancel"
           placeholder='Search'
-          onChangeText={updateSearch}
+          onChangeText={(newText) => setSearch(newText)}
           onSubmitEditing={() => searching(search)}
-          // onClear={() => setItem([])}
+          // onClear={() => setItems([])}
           value={search}
         />
         <Button
@@ -99,7 +220,7 @@ export default function SearchScreen({navigation, route}) {
       >
       </View>
       {
-        item.length === 0 ? (
+        items.length === 0 ? (
           <View
             style={{
               flex: 1,
@@ -108,7 +229,7 @@ export default function SearchScreen({navigation, route}) {
             }}
           >
             <Image
-              source={require('../../images/search.png')}
+              source={require('src/images/search.png')}
               style={{width: 175, height: 175}}
             />
           </View>
@@ -117,14 +238,14 @@ export default function SearchScreen({navigation, route}) {
             style={[styles.container,]}
           >
             <FlatList
-              data={DATA}
-              renderItem={({item}) => <Card title={item.title} navigation={navigation} />}
-              keyExtractor={item => item.id}
+              data={items}
+              renderItem={({item}) => <Card building={item} navigation={navigation} />}
+              keyExtractor={item => item.data.id}
             />
           </View>
         )
       }
-      <Modal isVisible={visible} onClose={setVisible}></Modal>
+      <Modal faculties={faculties} isVisible={visible} onClose={setVisible} onSelected={selectHandler}></Modal>
       <StatusBar style="auto" />
     </View>
   )
@@ -161,6 +282,6 @@ const styles = StyleSheet.create({
     flex: 4
   },
   title: {
-    fontSize: 32,
+    fontSize: 18,
   },
 });

@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { CheckBox, Button } from '@rneui/themed';
 
-export default function SearchModal({isVisible, onClose}) {
+export default function SearchModal({faculties, isVisible, onClose, onSelected}) {
   const [selectedIndex, setIndex] = useState('');
 
-  const faculties = ['None', 'Agriculture', 'Architecture', 'Fine Art', 'Education', 'humanities', 'Science']
+  // const faculties = ['None', 'Agriculture', 'Architecture', 'Fine Art', 'Education', 'humanities', 'Science']
 
   return (
     <Modal 
@@ -34,11 +34,11 @@ export default function SearchModal({isVisible, onClose}) {
               {
                 faculties.map(faculty => {
                   return <CheckBox
-                    key={faculty}
-                    title={faculty}
-                    checked={selectedIndex === faculty}
+                    key={faculty.fid}
+                    title={faculty.name}
+                    checked={selectedIndex === faculty.fid}
                     onPress={() => { 
-                      selectedIndex === faculty ? setIndex('') : setIndex(faculty)
+                      selectedIndex === faculty ? setIndex('') : setIndex(faculty.fid)
                     }}
                     checkedIcon="dot-circle-o"
                     uncheckedIcon="circle-o"
@@ -60,6 +60,10 @@ export default function SearchModal({isVisible, onClose}) {
                 name: 'search',
                 size: 25,
                 color: 'white',
+              }}
+              onPress={() => {
+                setIndex('')
+                onSelected(selectedIndex)
               }}
             />
           </View>

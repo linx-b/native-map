@@ -1,15 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useEffect, useState } from 'react';
-import { useIsFocused } from '@react-navigation/native'
 import { 
   collection,
-  addDoc,
   getDocs,
   query,
   where,
-  doc,
-  getDoc
 } from "firebase/firestore";
 import db from 'database/firebase'
 import SubMap from 'components/SubMap'
@@ -22,31 +19,42 @@ export default function SubMapScreen({navigation, route}) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
-
+      const uid = await AsyncStorage.getItem('uid') 
       const buildings = await getDocs(collection(db, 'maps', fid , 'buildings'))
-      const _query = query(collection(db, 'mapping'), where('fid', '==', fid))
+      const _query = query(collection(db, 'mapping'), where('fid', '==', fid), where('uid', '==', uid))
       const markers = await getDocs(_query)
 
-      const _data = []
+      // const _data = []
 
-      buildings.forEach(b => {
-        let marker = null
-        markers.forEach(m => {
-          const { bid } = m.data()
-          marker = marker || (bid === b.id && { id: m.id, ...m.data()})
-        })
+      // buildings.forEach(b => {
+      //   let marker = null
+      //   markers.forEach(m => {
+      //     const { bid } = m.data()
+      //     marker = marker || (bid === b.id && { id: m.id, ...m.data()})
+      //   })
 
-        const d = {
-          id: b.id,
-          ...b.data(),
-          marker: marker || null,
-        }
+      //   const d = {
+      //     id: b.id,
+      //     ...b.data(),
+      //     marker: marker || null,
+      //   }
         
-        _data.push(d)
+      //   _data.push(d)
 
+      // })
+
+      // setData(_data)
+
+      const _d =  buildings.docs.map(building => {
+        const marker = markers.docs.find(marker => marker.data().bid === building.id )
+        return {
+          id: building.id,
+          ...building.data(),
+          marker: marker?.id ? {id: marker?.id, ...marker?.data()} : null
+        }
       })
 
-      setData(_data)
+      setData(_d)
       
       // await _bs.then(querySnapshot => {
       //   querySnapshot.forEach((doc) => {
@@ -65,7 +73,7 @@ export default function SubMapScreen({navigation, route}) {
       // })
       
     })
-    return unsubscribe;
+    return unsubscribe
   }, [navigation])
 
   if(!available) {

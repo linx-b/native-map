@@ -2,12 +2,13 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity,  } from 'react-native';
 import { Input, FAB, Button, Divider } from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Note({index, body, hendler}) {
+  console.log("body =>", body)
   const [text, setText] = useState(body)
   const [edit, setEdit] = useState(false)
-
+  // useEffect(() => setText(body), [body])
   const setDefaultText = () => setText(body)
 
   return (
@@ -33,8 +34,11 @@ export default function Note({index, body, hendler}) {
                 setEdit(!edit)
               }}
               inputStyle={{
-                fontSize: 15
+                fontSize: 15,
+                color: 'white'
               }}
+              containerStyle={{}}
+              // inputContainerStyle={{backgroundColor: 'blue',}}
             ></Input>
           ) : (
             <Text style={{fontSize: 15, color: 'white'}}>{body}</Text>
@@ -84,7 +88,7 @@ export default function Note({index, body, hendler}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#BFACE2',
+    backgroundColor: '#635985',
     marginVertical: 10,
     // alignItems: 'center',
     // justifyContent: 'center',
@@ -106,7 +110,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 7,
   },
   noteFooter: {
-    // backgroundColor: 'white',
     flexWrap: 'wrap',
     padding: 7,
     flexDirection: 'row',

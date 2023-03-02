@@ -1,6 +1,5 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar'
-import { CommonActions, StackActions, TabActions } from "@react-navigation/native";
 import { 
   StyleSheet,
   Text,
@@ -8,8 +7,17 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
+  ImageBackground,
+  ActivityIndicator,
 } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Button, Divider } from '@rneui/themed'
+
+import { collection, doc, getDocs, getDoc, query, where, } from "firebase/firestore"; 
+import db from 'database/firebase'
+
+import _b from 'util/building'
+import markers  from 'util/markers'
 
 import AuthContext from '../auth/context';
 
@@ -31,15 +39,24 @@ const DATA = [
   },
 ];
 
-function Card({navigation, title}) {
+function Card({navigation, building}) {
+  console.log('Card =>', building)
+  const { data } = building
+  const { marker } = data
   return (
-    <TouchableOpacity onPress={() =>navigation.navigate('Detail', {code: 'NMLINX'})}>
+    <TouchableOpacity onPress={() =>navigation.navigate('Detail', building)}>
       <View style={styles.item}>
-        <Image
-          style={styles.image}
-          source={require('../../images/building.png')}
-        />
-        <Text style={[styles.title, styles.description]}>{title}</Text>
+        <ImageBackground
+          resizeMode="contain"
+          style={[styles.image, { alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
+          source={_b[data?.src]}
+        >
+          <Image
+            source={markers[marker.msrc]}
+            style={[{width: 75, height: 75, marginBottom: 20}]}
+          ></Image>
+        </ImageBackground>
+        <Text style={[styles.title, styles.description]}>{data?.name}</Text>
       </View>
     </TouchableOpacity>
   )
@@ -47,6 +64,52 @@ function Card({navigation, title}) {
 
 export default function Profile({navigation, route}) {
   const { signOut } = useContext(AuthContext)
+  const [buildings, setBuildings] = useState([])
+  const [user, setUser] = useState({})
+
+  useEffect(() => {
+    const fetch = async () => {
+      const uid = await AsyncStorage.getItem('uid')
+      await getDoc(doc(db, 'users', uid)).then(snapshot => {
+        console.log('user =>', snapshot.data())
+        setUser(snapshot.data())
+      })
+    }
+
+    fetch()
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      const uid = await AsyncStorage.getItem('uid')
+      const _query = query(collection(db, 'mapping'), where('uid', '==', uid))
+      await getDocs(_query).then(async snapshot => {
+        let _buildings = []
+        for(const element of snapshot.docs) {
+          const { fid, bid } = element.data()
+          await getDoc(doc(db, 'maps', fid, 'buildings', bid)).then(document => {
+            if(document.exists()) {
+              _buildings.push({
+                fid: fid,
+                data: {
+                  id: document.id,
+                  ...document.data(),
+                  marker: {
+                    id: element.id,
+                    ...element.data()
+                  }
+                }
+              })
+            }
+          })
+        }
+        setBuildings(_buildings)
+      })
+    })
+
+    return unsubscribe
+  }, [navigation])
+
   return (
     <View style={styles.container}>
       <View  style={[ styles.card, {marginTop: 40, marginBottom: 20,}]}>
@@ -59,10 +122,10 @@ export default function Profile({navigation, route}) {
         </View>
         <View style={{flex: 1}}>
           <View>
-            <Text style={[styles.titleText]}>Kenny</Text>
-            <Text style={[styles.titleText]}>McCormick</Text>
+            <Text style={[styles.titleText]}>{user.fname}</Text>
+            <Text style={[styles.titleText]}>{user.lname}</Text>
             <Divider />
-            <Text style={styles.subTitleText}>lilin.3x@gmail.com</Text>
+            <Text style={styles.subTitleText}>{user.email}</Text>
           </View>
           <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-evenly',}}>
             <Button
@@ -102,13 +165,21 @@ export default function Profile({navigation, route}) {
         </View>
       </View>
       <Divider />
-      <View style={{flex: 1}}>
-        <FlatList
-          data={DATA}
-          renderItem={({item}) => <Card title={item.title} navigation={navigation} />}
-          keyExtractor={item => item.id}
-        />
-      </View>
+      {
+        buildings ? (
+          <View style={{flex: 1}}>
+            <FlatList
+              data={buildings}
+              renderItem={({item}) => <Card building={item} navigation={navigation} />}
+              keyExtractor={item => item.data.id}
+            />
+          </View>
+        ) : (
+          <View style={{flex: 1, justifyContent: 'center'}}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        )
+      }
       {/* <Button
         title="Sign Out"
         icon={{
@@ -187,6 +258,6 @@ const styles = StyleSheet.create({
     flex: 4
   },
   title: {
-    fontSize: 32,
+    fontSize: 18,
   },
 });

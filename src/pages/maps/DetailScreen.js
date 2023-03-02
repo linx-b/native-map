@@ -4,11 +4,11 @@ import {
   View, 
   Image,
   ImageBackground,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
 } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useEffect, useMemo, useState } from 'react'
 import { Input, FAB, Button } from '@rneui/themed'
 
@@ -32,9 +32,12 @@ async function add(data) {
 export default function Description({ navigation, route }) {
   const { fid, data } = route.params
   const { marker } = data
-  console.log('marker =>', marker)
   const [notes, setNotes] = useState(marker?.notes || [])
   const [text, setText] = useState('')
+
+  useEffect(() => {
+    setNotes(marker?.notes || [])
+  }, [marker])
 
   const updateDoc = async () => {
     await update(marker.id, notes).then((res) => {
@@ -43,13 +46,14 @@ export default function Description({ navigation, route }) {
   }
 
   const addDoc = async () => {
+    const uid = await AsyncStorage.getItem('uid')
     await add({
       bid: data.id,
       fid: fid,
       mnote: '',
       msrc: '',
       notes: notes,
-      uid: 'i7wmi5dcHsf7FQhLh2Ws'
+      uid: uid
     }).then((res) => {
       Alert.alert("Add Successful")
     })
@@ -63,12 +67,10 @@ export default function Description({ navigation, route }) {
         setNotes(n)
       },
       update: (index, text) => {
-        const nextState = notes.map((c, i) => {
+        const nextState = notes?.map((c, i) => {
           if (i === index) {
-            // Increment the clicked counter
             return text
           } else {
-            // The rest haven't changed
             return c;
           }
         })
@@ -82,7 +84,7 @@ export default function Description({ navigation, route }) {
       <ScrollView  showsVerticalScrollIndicator={false}>
         <View style={[styles.containerImage]}>
           <ImageBackground
-            source={buildings[data.name]}
+            source={buildings[data.src]}
             resizeMode="contain"
             style={[{width: '100%', height: 225, flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
           >
@@ -116,14 +118,23 @@ export default function Description({ navigation, route }) {
               setText('')
             }}
           />
+          <FAB
+            style={{marginVertical: 2, backgroundColor: 'red', alignSelf: "flex-end"}}
+            icon={{ name: 'add', color: 'white' }}
+            size="small"
+            onPress={() => {
+              setNotes([text, ...notes])
+              setText('')
+            }}
+          />
         </View>
         {
-          notes.map((note, index) => <Note key={index} body={note} index={index} hendler={noteHandler}/>)
+          notes.map((note, index) => <Note key={index + note} body={note} index={index} hendler={noteHandler}/>)
         }
-        <View style={{alignItems: 'center'}}>
+        <View style={{alignItems: 'center', marginTop: 10}}>
           <Button
             title="Save"
-            icon={{
+            icon={{ 
               name: 'save',
               type: 'material',
               size: 20,
@@ -142,6 +153,9 @@ export default function Description({ navigation, route }) {
               // marginHorizontal: 50,
               marginVertical: 10,
             }}
+            errorStyle={{
+              
+            }}
             onPress={() => {
               marker ? updateDoc() : addDoc()
             }}
@@ -150,7 +164,7 @@ export default function Description({ navigation, route }) {
       </ScrollView>
       <FAB 
         onPress={() =>
-          navigation.navigate('Marker', { marker: marker})
+          navigation.navigate('Marker', { fid: fid, building: data})
         }
         color="#BA94D1"
         placement="left"
@@ -188,8 +202,8 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     containerInput: {
-      padding: 16,
-      borderRadius: 6,
+      padding: 7,
+      borderRadius: 7,
     },
     marker: {
       // position: 'absolute',

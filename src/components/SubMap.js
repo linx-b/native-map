@@ -74,7 +74,7 @@ const SubMap = ({navigation, fid, data}) => {
                     width="200"
                     height="200"
                     // preserveAspectRatio="xMidYMid slice"
-                    href={_buildings[building.name]}
+                    href={_buildings[building.src]}
                   ></Image>
                   { marker && <Image
                       // onPress={() => alert('Press on kenny')}

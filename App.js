@@ -1,5 +1,6 @@
 // import { StatusBar } from 'expo-status-bar';
 // import { StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NavigationContainer, CommonActions } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -9,12 +10,9 @@ import { useReducer, useEffect, useMemo } from 'react'
 import * as SecureStore from 'expo-secure-store'
 import { 
   collection,
-  addDoc,
   getDocs,
   query,
   where,
-  doc,
-  getDoc
 } from "firebase/firestore";
 import db from 'database/firebase'
 
@@ -110,6 +108,8 @@ export default function App() {
         if(!user) {
           return false
         }
+
+        await AsyncStorage.setItem('uid', user.id)
 
         dispatch({ type: 'SIGN_IN', token: user.id, role: user.role,})
         
