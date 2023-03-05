@@ -13,31 +13,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Button, Divider } from '@rneui/themed'
 
-import { collection, doc, getDocs, getDoc, query, where, } from "firebase/firestore"; 
+import { collection, doc, getDocs, getDoc, query, where, } from "firebase/firestore"
 import db from 'database/firebase'
 
 import _b from 'util/building'
 import markers  from 'util/markers'
 
-import AuthContext from '../auth/context';
-
-const DATA = [
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-    title: 'First Item',
-    image: 'kenny.jpg',
-  },
-  {
-    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-    title: 'Second Item',
-    image: 'kenny.jpg',
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-    title: 'Third Item',
-    image: 'kenny.jpg',
-  },
-];
+import AuthContext from '../auth/context'
 
 function Card({navigation, building}) {
   console.log('Card =>', building)

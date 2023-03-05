@@ -7,6 +7,9 @@ const building = {
     geology: require('src/images/building/geology.png'),
     math: require('src/images/building/math.png'),
     physis1: require('src/images/building/physis1.png'),
+    custom1: require('src/images/building/custom1.png'),
+    custom2: require('src/images/building/custom2.png'),
+    custom3: require('src/images/building/custom3.png'),
 }
 
 export default building

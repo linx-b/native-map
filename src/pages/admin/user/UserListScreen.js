@@ -1,20 +1,69 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, } from 'react-native';
+import { StatusBar } from 'expo-status-bar'
+import { StyleSheet, ScrollView, Alert } from 'react-native'
 
-import UserCard from 'components/UserCard';
+import UserCard from 'components/UserCard'
+import { useEffect, useState } from 'react'
+
+import { 
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore"
+import db from 'database/firebase'
+
+function deleteDoc(uid) {
+  return updateDoc(doc(db, "users", uid), {
+    del: true,
+  })
+}
 
 export default function UserListScreen({navigation, route}) {
+  const [users , setUsers] = useState([])
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      getDocs(
+        query(
+          collection(db, "users"),
+          where('del', '!=', true)
+        )
+      ).then((querySnapshot) => {
+        const _users = []
+        querySnapshot.forEach((user) => {
+          _users.push({
+            id: user.id,
+            ...user.data()
+          })
+        })
+        setUsers(_users)
+      })
+    })
+    return unsubscribe
+  }, [navigation])
+
+  const deleteHandler = (index, uid) => {
+    Alert.alert('Warning', 'Delete this user ?', [
+      {text: 'OK', onPress: () => deleteDoc(uid).then(() => {
+        const n = [...users]
+        n.splice(index, 1)
+        setUsers(n)
+      })},
+      {
+        text: 'Cancel',
+        // onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+    ]);
+  }
+
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="auto" />
-      <TouchableOpacity onPress={() => navigation.navigate('Detail')}>
-        <UserCard></UserCard>
-      </TouchableOpacity>
-      <UserCard></UserCard>
-      <UserCard></UserCard>
-      <UserCard></UserCard>
-      <UserCard></UserCard>
-      <UserCard></UserCard>
+      {
+        users?.map((user, index) => user.role === 'USER' && <UserCard user={user} key={user.id} navigation={navigation} handler={(uid) => deleteHandler(index, uid)}></UserCard>)
+      }
     </ScrollView>
   );
 }
