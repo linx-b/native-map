@@ -17,16 +17,21 @@ import MainMap from 'components/MainMap'
 import { useEffect, useState } from 'react';
 
 export default function Home({navigation, route}) {
-  const [faculties, setFacultues] = useState([])
+  const [faculties, setFaculties] = useState([])
 
   useEffect(() => {
-    console.log("mounted")
     const fetch = async () => {
       await getDocs(collection(db, 'maps')).then(querySnapshot => {
+        const _faculties = []
         querySnapshot.forEach((doc) => {
-          console.log(doc.id, " => ", doc.data());
-          // console.log(doc);
+          // console.log(doc.id, " => ", doc.data());
+          _faculties.push({
+            id: doc.id,
+            ...doc.data()
+          })
         })
+
+        setFaculties(_faculties)
       })
     }
 
@@ -63,7 +68,7 @@ export default function Home({navigation, route}) {
         }
       /> */}
       <StatusBar style="auto" />
-      <MainMap navigation={navigation} route={route} ></MainMap>
+      <MainMap navigation={navigation} faculties={faculties}></MainMap>
     </View>
   );
 }

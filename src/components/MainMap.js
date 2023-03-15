@@ -1,9 +1,11 @@
 import * as React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Svg, { Path, G, Image } from "react-native-svg";
-import SvgPanZoom, { SvgPanZoomElement } from 'react-native-svg-pan-zoom';
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import Svg, { Path, G, Image } from "react-native-svg"
+import SvgPanZoom, { SvgPanZoomElement } from 'react-native-svg-pan-zoom'
 
-export default function MainMap({navigation, route}) {
+import icon from 'util/icon'
+
+export default function MainMap({navigation, faculties}) {
   return (
     // <View>
       <SvgPanZoom
@@ -916,7 +918,23 @@ export default function MainMap({navigation, route}) {
             d=" M636.521851,391.667603  C634.111328,390.249573 634.494446,388.978943 637.508606,388.098877  C637.708496,389.117828 637.338318,390.205078 636.521851,391.667603  z"
           />
           <SvgPanZoomElement>
-            <Image
+            {
+              faculties.map((faculty) => {
+                return (
+                  <Image
+                    key={faculty.id}
+                    onPress={() =>navigation.navigate('Sub-map', {available: faculty.id === 'mhItJbLRdujDsnOzpuqa', fid: faculty.id})}
+                    x={faculty.x}
+                    y={faculty.y}
+                    width="150"
+                    height="150"
+                    // preserveAspectRatio="xMidYMid slice"
+                    href={icon[faculty.src]}
+                  />
+                )
+              })
+            }
+            {/* <Image
               onPress={() =>navigation.navigate('Sub-map', {available: true, fid: 'mhItJbLRdujDsnOzpuqa'})}
               x="1100"
               y="1200"
@@ -924,7 +942,7 @@ export default function MainMap({navigation, route}) {
               height="200"
               preserveAspectRatio="xMidYMid slice"
               href={require('src/images/icon/science.png')}
-            ></Image>
+            ></Image> */}
           </SvgPanZoomElement>
         </Svg>
       </SvgPanZoom>

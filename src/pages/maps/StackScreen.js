@@ -26,7 +26,7 @@ export default function MapStackScreen ({navigation}) {
     >
       <MapStack.Screen name="Main-map" component={MainMapScreen} />
       <MapStack.Screen name="Sub-map" component={SubMapScreen} />
-      <MapStack.Screen name="Detail" component={DetailScreen} />
+      <MapStack.Screen name="Detail" component={DetailScreen}  options={({ route }) => ({ title: route.params.data?.sname || 'Detail' })} />
       <MapStack.Screen name="Marker" component={MarkerScreen} />
       <MapStack.Screen name="Home" component={HomeScreen} />
       <MapStack.Screen name="About" component={AboutScreen} />

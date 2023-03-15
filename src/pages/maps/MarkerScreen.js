@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native'
+import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useEffect, useState } from 'react';
 import { Input, Button, Divider } from '@rneui/themed';
@@ -34,15 +35,14 @@ async function add(data) {
 export default function Marker({navigation, route}) {
   const { fid, building } = route.params
   const { marker } = building
+  const [temp, setTemp] = useState([])
   const [icon, setIcon] = useState(marker?.msrc || '')
   const [note, setNote] = useState(marker?.mnote || '')
-  console.log('marker =>', building)
   useEffect(() => {
 
   }, [])
 
   const _updateDoc = async () => {
-    console.log('Update =>')
     await update(marker.id, icon, note).then((res) => {
       Alert.alert("Update Successful", '', [
         {text: 'OK', onPress: () => navigation.navigate('Sub-map', {available: true, fid: fid})},
@@ -57,17 +57,17 @@ export default function Marker({navigation, route}) {
       fid: fid,
       mnote: note,
       msrc: icon,
-      notes: [],
+      notes: temp,
       uid: uid //TODO: fect uid from storage
     }).then((res) => {
-      Alert.alert("Add Successful", [
+      Alert.alert("Add Successful", '',[
         {text: 'OK', onPress: () => navigation.navigate('Sub-map', {available: true, fid: fid})},
       ])
     })
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={{ marginBottom: 20, marginHorizontal: -16 }}>
         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
           <TouchableOpacity 
@@ -103,33 +103,42 @@ export default function Marker({navigation, route}) {
           </TouchableOpacity>
         </ScrollView>
       </View>
-      <View>
-        <Text style={{fontSize: 18, fontWeight: 'bold',}}>Marker</Text>
-      </View>
-      <Divider></Divider>
-      <View style={{ width: '100%', height: 175, marginBottom: 5}}>
-        <ImageBackground
-          source={buildings[building.src]}
-          resizeMode="contain"
-          style={[{width: '100%', flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
-        >
-          <Image
+      <Divider width={2} color="white" style={{marginVertical: 10,}}></Divider>
+      <View style={{ borderRadius: 10,  backgroundColor: '#BFACE2', padding: 14}}>
+        <View>
+          <Text style={{fontSize: 18, fontWeight: 'bold', color: 'white'}}>Marker</Text>
+        </View>
+        <Divider></Divider>
+        <View style={{ width: '100%', height: 175, marginBottom: 5}}>
+          <ImageBackground
+            source={buildings[building.src]}
             resizeMode="contain"
-            source={markers[icon]}
-            style={[{width: 150, height: 150 }]}
-          ></Image>
-        </ImageBackground>
+            style={[{width: '100%', flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
+          >
+            <Image
+              resizeMode="contain"
+              source={markers[icon]}
+              style={[{width: 150, height: 150 }]}
+            ></Image>
+          </ImageBackground>
+        </View>
+        <View style={{width: '100%', marginTop: 7}}>
+          <Input
+            label="Note"
+            labelStyle={{color: 'white'}}
+            inputStyle={{color: 'white'}}
+            inputContainerStyle={{borderColor: 'white', marginBottom: 0}}
+            errorStyle={{display: 'none',}}
+            containerStyle={{marginBottom: 12}}
+            // placeholder='marker note'
+            multiline
+            numberOfLines={4}
+            value={note}
+            onChangeText={newText  => setNote(newText)}
+          />
+        </View>
       </View>
-      <View style={{width: '100%', marginTop: 7}}>
-        <Input
-          label="Note"
-          placeholder='marker note'
-          multiline
-          numberOfLines={4}
-          value={note}
-          onChangeText={newText  => setNote(newText)}
-        />
-      </View>
+      <Divider width={2} color="white" style={{marginTop: 10,}}></Divider>
       <View style={{width: '100%', alignItems: 'center'}}>
         <Button
           title="Save"
@@ -155,7 +164,8 @@ export default function Marker({navigation, route}) {
           onPress={() => { marker ?  _updateDoc() : _addDoc() }}
         />
       </View>
-    </SafeAreaView>
+      <StatusBar style="auto" />
+    </View>
   )
 }
 

@@ -1,11 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Image } from 'react-native';
 
-export default function NotFound({navigation, route}) {
+export default function NotFound({image}) {
   return (
     <View style={styles.container}>
       <Image
-        source={require('src/images/404.png')}
+        source={image}
         style={{width: 325, height: 275}}
       />
     </View>

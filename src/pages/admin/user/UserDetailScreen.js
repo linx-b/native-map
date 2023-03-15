@@ -41,10 +41,9 @@ export default function UserDetailScreen({navigation, route}) {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       const _query = query(collection(db, 'mapping'), where('uid', '==', user.id))
-      console.log('useEffect')
       getDocs(_query).then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
-          console.log("mapping =>", doc.id, doc.data())
+          // console.log("mapping =>", doc.id, doc.data())
         })
       })
     })

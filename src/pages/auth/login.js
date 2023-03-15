@@ -101,7 +101,7 @@ export default function Login({navigation, route}) {
             marginVertical: 10,
             alignSelf: 'center'
           }}
-          onPress={() => navigation.navigate('SignUp')}
+          // onPress={() => navigation.navigate('SignUp')}
         />
       </View>
       <StatusBar style="auto" />

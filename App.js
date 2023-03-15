@@ -98,8 +98,9 @@ export default function App() {
         //username.trim()
         // ====================================================
         const _query = query(collection(db, 'users'), 
-          where("email", "==", 'admin@mail.com'),
-          where("password", "==", '123456789')
+          where("email", "==", username.trim()),
+          where("password", "==", password.trim()),
+          where("del", "==", false)
         )
         const querySnapshot = await getDocs(_query)
         const [user] = querySnapshot.docs

@@ -19,26 +19,33 @@ import db from 'database/firebase'
 import _b from 'util/building'
 import markers  from 'util/markers'
 
+import NotFound from 'components/404'
 import AuthContext from '../auth/context'
 
+const n404 = require('src/images/not_found.png')
+
 function Card({navigation, building}) {
-  console.log('Card =>', building)
   const { data } = building
   const { marker } = data
   return (
     <TouchableOpacity onPress={() =>navigation.navigate('Detail', building)}>
       <View style={styles.item}>
-        <ImageBackground
-          resizeMode="contain"
-          style={[styles.image, { alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
-          source={_b[data?.src]}
-        >
-          <Image
-            source={markers[marker.msrc]}
-            style={[{width: 75, height: 75, marginBottom: 20}]}
-          ></Image>
-        </ImageBackground>
-        <Text style={[styles.title, styles.description]}>{data?.name}</Text>
+        <View style={{flex: 3, alignItems: 'center'}}>
+          <ImageBackground
+            resizeMode="contain"
+            style={[styles.image, { alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
+            source={_b[data?.src]}
+          >
+            <Image
+              source={markers[marker.msrc]}
+              style={[{width: 75, height: 75, marginBottom: 20}]}
+            ></Image>
+          </ImageBackground>
+        </View>
+        <View style={{flex: 4, alignItems: 'flex-start', justifyContent: 'center'}}>
+          <Text style={[styles.title, styles.description]}>{data?.ename}({data?.sname})</Text>
+          <Text style={[styles.title, styles.description]}>{data?.name}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   )
@@ -48,12 +55,13 @@ export default function Profile({navigation, route}) {
   const { signOut } = useContext(AuthContext)
   const [buildings, setBuildings] = useState([])
   const [user, setUser] = useState({})
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const fetch = async () => {
       const uid = await AsyncStorage.getItem('uid')
       await getDoc(doc(db, 'users', uid)).then(snapshot => {
-        console.log('user =>', snapshot.data())
+        // console.log('user =>', snapshot.data())
         setUser(snapshot.data())
       })
     }
@@ -63,12 +71,20 @@ export default function Profile({navigation, route}) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
+      setLoading(true)
       const uid = await AsyncStorage.getItem('uid')
       const _query = query(collection(db, 'mapping'), where('uid', '==', uid))
       await getDocs(_query).then(async snapshot => {
         let _buildings = []
         for(const element of snapshot.docs) {
           const { fid, bid } = element.data()
+          const {mnote, msrc, notes} = element.data()
+
+          if (!mnote && !msrc && notes.length == 0) {
+            console.log("skippppppppppppppppppp")
+            continue
+          }
+
           await getDoc(doc(db, 'maps', fid, 'buildings', bid)).then(document => {
             if(document.exists()) {
               _buildings.push({
@@ -86,6 +102,7 @@ export default function Profile({navigation, route}) {
           })
         }
         setBuildings(_buildings)
+        setLoading(false)
       })
     })
 
@@ -110,7 +127,7 @@ export default function Profile({navigation, route}) {
             <Text style={styles.subTitleText}>{user.email}</Text>
           </View>
           <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-evenly',}}>
-            <Button
+            {/* <Button
               title="Edit"
               icon={{
                 name: 'edit',
@@ -125,7 +142,7 @@ export default function Profile({navigation, route}) {
                 borderWidth: 0,
                 borderRadius: 10,
               }}
-            />
+            /> */}
             <Button
               title="Log Out"
               size="md"
@@ -148,43 +165,24 @@ export default function Profile({navigation, route}) {
       </View>
       <Divider />
       {
-        buildings ? (
-          <View style={{flex: 1}}>
-            <FlatList
-              data={buildings}
-              renderItem={({item}) => <Card building={item} navigation={navigation} />}
-              keyExtractor={item => item.data.id}
-            />
-          </View>
-        ) : (
+        loading ? (
           <View style={{flex: 1, justifyContent: 'center'}}>
             <ActivityIndicator size="large" color="#0000ff" />
           </View>
+        ) : (
+          buildings.length > 0 ? (
+            <View style={{flex: 1}}>
+              <FlatList
+                data={buildings}
+                renderItem={({item}) => <Card building={item} navigation={navigation} />}
+                keyExtractor={item => item.data.id}
+              />
+            </View>
+          ) : (
+            <NotFound image={n404}></NotFound>
+          )
         )
       }
-      {/* <Button
-        title="Sign Out"
-        icon={{
-          name: 'sign-out',
-          type: 'font-awesome',
-          size: 15,
-          color: 'white',
-        }}
-        iconContainerStyle={{ marginRight: 10 }}
-        titleStyle={{ fontWeight: '700' }}
-        buttonStyle={{
-          backgroundColor: 'rgba(90, 154, 230, 1)',
-          borderColor: 'transparent',
-          borderWidth: 0,
-          borderRadius: 30,
-        }}
-        containerStyle={{
-          width: 200,
-          marginHorizontal: 50,
-          marginVertical: 10,
-        }}
-        onPress={() => signOut()}
-      /> */}
       <StatusBar style="auto" />
     </View>
   );
@@ -225,8 +223,8 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    backgroundColor: '#f0f0f0',
-    padding: 20,
+    backgroundColor: '#BFACE2',
+    padding: 15,
     marginVertical: 10,
     // marginHorizontal: 16,
     borderRadius: 12,
@@ -237,9 +235,15 @@ const styles = StyleSheet.create({
     height: 110,
   },
   description: {
-    flex: 4
+    // flex: 4
   },
   title: {
+    color: 'white',
     fontSize: 18,
+    fontWeight: '600'
   },
+  subTitle: {
+    color: 'white',
+    fontSize: 14,
+  }
 });

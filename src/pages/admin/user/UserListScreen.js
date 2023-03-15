@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, ScrollView, Alert } from 'react-native'
 
 import UserCard from 'components/UserCard'
+import NotFound from 'components/404'
 import { useEffect, useState } from 'react'
 
 import { 
@@ -58,6 +59,10 @@ export default function UserListScreen({navigation, route}) {
     ]);
   }
 
+  if(!users.length) {
+    return (<NotFound image={require('src/images/not_found.png')}></NotFound>)
+  }
+  
   return (
     <ScrollView style={styles.container}>
       <StatusBar style="auto" />

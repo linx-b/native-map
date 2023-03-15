@@ -93,7 +93,7 @@ function update(fid, bid, payload) {
   return updateDoc(doc(db, 'maps', fid, 'buildings', bid), payload)
 }
 
-export default function About({navigation, route}) {
+export default function Detail({navigation, route}) {
   const { fid, bid } = route.params
   const [building, setBuilding] = useState({})
   const [edit, setEdit] = useState(false)
@@ -102,7 +102,7 @@ export default function About({navigation, route}) {
     const fetch = async () => {
       await getDoc(doc(db, 'maps', fid, 'buildings', bid)).then((document) => {
         if(document.exists()){
-          console.log('Detail =>', document.id, document.data())
+          // console.log('Detail =>', document.id, document.data())
           setBuilding(document.data())
         }
       })

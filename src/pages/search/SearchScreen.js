@@ -7,6 +7,7 @@ import {
   Image, 
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SearchBar, Button, Divider } from '@rneui/themed'
@@ -52,12 +53,17 @@ function Card({navigation, building}) {
   return (
     <TouchableOpacity onPress={() =>navigation.navigate('Detail', building)}>
       <View style={styles.item}>
-        <Image
-          resizeMode="contain"
-          style={styles.image}
-          source={buildings[data?.src]}
-        />
-        <Text style={[styles.title, styles.description]}>{data?.name}</Text>
+        <View style={{flex: 3, alignItems: 'center'}}>
+          <Image
+            resizeMode="contain"
+            style={styles.image}
+            source={buildings[data?.src]}
+          />
+        </View>
+        <View style={{flex: 4, alignItems: 'flex-start', justifyContent: 'center'}}>
+          <Text style={[styles.title, styles.description]}>{data?.ename}({data?.sname})</Text>
+          <Text style={[styles.subTitle, styles.description]}>{data?.name}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   )
@@ -70,10 +76,12 @@ function getFaculty() {
 
 async function findByName(name) {
   const _query1 = query(collectionGroup(db, 'buildings'), orderBy('name'), startAt(name), endAt(name+'\uf8ff'))
-  // const _query2 = query(collectionGroup(db, 'buildings'), orderBy('ename'), startAt(name), endAt(name+'\uf8ff'))
+  const _query2 = query(collectionGroup(db, 'buildings'), orderBy('ename'), startAt(name), endAt(name+'\uf8ff'))
+  const _query3 = query(collectionGroup(db, 'buildings'), orderBy('sname'), startAt(name), endAt(name+'\uf8ff'))
   const _name = await getDocs(_query1)
-  // const _ename = await getDocs(_query2)
-  return [..._name.docs]
+  const _ename = await getDocs(_query2)
+  const _sname =  await getDocs(_query3)
+  return [..._name.docs, ..._ename.docs, ..._sname.docs]
 }
 
 function findByFaculty(fid) {
@@ -92,6 +100,7 @@ export default function SearchScreen({navigation, route}) {
   const [items, setItems] = useState([])
   const [faculties, setFaculties] = useState([])
   const [visible, setVisible] = useState([false])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -105,12 +114,13 @@ export default function SearchScreen({navigation, route}) {
     getFaculty().then(querySnapshot => {
       const data = []
       querySnapshot.forEach(doc => data.push({fid: doc.id, name: doc.data()?.name}))
-      console.log('faculties =>', data)
+      // console.log('faculties =>', data)
       setFaculties(data)
     })
   }, [])
 
   const searching = (data) => {
+    setLoading(true)
     findByName(data).then(async (docs) => {
       const list = []
       for(const doc of docs) {
@@ -132,6 +142,7 @@ export default function SearchScreen({navigation, route}) {
       
       }
       setItems(list)
+      setLoading(false)
     })
     // data ? setItem(DATA) : setItem([])
     
@@ -143,10 +154,11 @@ export default function SearchScreen({navigation, route}) {
   }
 
   const selectHandler = (keyword) => {
+    setLoading(true)
     findByFaculty(keyword).then(async buildings => {
       const list = []
       for(const doc of buildings.docs) {
-        console.log('doc =>', doc.id, doc.data())
+        // console.log('doc =>', doc.id, doc.data())
         const mapping = await getMapping(doc.id)
         list.push({
           fid: doc.ref
@@ -164,6 +176,7 @@ export default function SearchScreen({navigation, route}) {
         })
       }
       setItems(list)
+      setLoading(false)
     })
     setVisible(false)
   }
@@ -220,29 +233,35 @@ export default function SearchScreen({navigation, route}) {
       >
       </View>
       {
-        items.length === 0 ? (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Image
-              source={require('src/images/search.png')}
-              style={{width: 175, height: 175}}
-            />
+        loading ? (
+          <View style={{flex: 1, justifyContent: 'center'}}>
+            <ActivityIndicator size="large" color="#0000ff" />
           </View>
         ) : (
-          <View
-            style={[styles.container,]}
-          >
-            <FlatList
-              data={items}
-              renderItem={({item}) => <Card building={item} navigation={navigation} />}
-              keyExtractor={item => item.data.id}
-            />
-          </View>
+          items.length === 0 ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Image
+                source={require('src/images/search.png')}
+                style={{width: 175, height: 175}}
+              />
+            </View>
+          ) : (
+            <View
+              style={[styles.container,]}
+            >
+              <FlatList
+                data={items}
+                renderItem={({item}) => <Card building={item} navigation={navigation} />}
+                keyExtractor={item => item.data.id}
+              />
+            </View>
+          )
         )
       }
       <Modal faculties={faculties} isVisible={visible} onClose={setVisible} onSelected={selectHandler}></Modal>
@@ -268,7 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     backgroundColor: '#BFACE2',
-    padding: 20,
+    padding: 15,
     marginVertical: 10,
     marginHorizontal: 16,
     borderRadius: 12,
@@ -279,9 +298,15 @@ const styles = StyleSheet.create({
     height: 110,
   },
   description: {
-    flex: 4
+    // flex: 4
   },
   title: {
+    color: 'white',
     fontSize: 18,
+    fontWeight: '600'
   },
+  subTitle: {
+    color: 'white',
+    fontSize: 14,
+  }
 });

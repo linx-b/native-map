@@ -7,10 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useEffect, useMemo, useState } from 'react'
-import { Input, FAB, Button } from '@rneui/themed'
+import { Input, FAB, Button, Divider } from '@rneui/themed'
 
 import { collection, addDoc, updateDoc , doc } from "firebase/firestore"; 
 import db from 'database/firebase'
@@ -25,6 +26,13 @@ async function update(id, notes) {
   })
 }
 
+async function deleteMarker(id) {
+  return await updateDoc(doc(db, "mapping", id), {
+    msrc: '',
+    mnote: '',
+  })
+}
+
 async function add(data) {
   return await addDoc(collection(db, "mapping"), data)
 }
@@ -32,15 +40,34 @@ async function add(data) {
 export default function Description({ navigation, route }) {
   const { fid, data } = route.params
   const { marker } = data
-  const [notes, setNotes] = useState(marker?.notes || [])
+
+  console.log("in detail marker =>", marker)
+  // const [m, setM] = useState(marker?.msrc || '')
+  // const [marker, setMarker] = useState()
+  // const [notes, setNotes] = useState(marker?.notes || [])
+  // const [text, setText] = useState('')
+
+  // const [m, setM] = useState()
+  const [__marker, set__marker] = useState(null)
+  const [notes, setNotes] = useState([])
   const [text, setText] = useState('')
 
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('focus', async () => {
+  //     set__marker(marker)
+  //     setNotes(marker?.notes || [])
+  //   })
+  //   return unsubscribe
+  // }, [navigation])
+
   useEffect(() => {
+    console.log("TEST =>", marker)
     setNotes(marker?.notes || [])
+    set__marker(marker)
   }, [marker])
 
   const updateDoc = async () => {
-    await update(marker.id, notes).then((res) => {
+    await update(__marker?.id, notes).then((res) => {
       Alert.alert("Update Successful")
     })
   }
@@ -56,7 +83,40 @@ export default function Description({ navigation, route }) {
       uid: uid
     }).then((res) => {
       Alert.alert("Add Successful")
+      set__marker({
+        id: res.id,
+        bid: data.id,
+        fid: fid,
+        mnote: '',
+        msrc: '',
+        notes: notes,
+        uid: uid
+      })
     })
+  }
+
+  const del = () => {
+    Alert.alert('Warning', 'Delete this Marker', [
+      {text: 'OK', onPress: () =>  deleteMarker(__marker?.id).then(() => {
+        //FIXME: re-active ?
+        // marker.msrc = ""
+        // marker.mnote = ""
+        set__marker({
+          ...__marker,
+          msrc: "",
+          mnote: "",
+        })
+        // setM('')
+      })},
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ])
+  }
+
+  const show = () => {
+    Alert.alert('Note', __marker?.mnote)
   }
   
   const noteHandler = useMemo(
@@ -78,7 +138,7 @@ export default function Description({ navigation, route }) {
       }
     }),[notes]
   )
-
+   // Linking.openURL(data.link)
   return (
     <View style={styles.container}>
       <ScrollView  showsVerticalScrollIndicator={false}>
@@ -89,15 +149,13 @@ export default function Description({ navigation, route }) {
             style={[{width: '100%', height: 225, flex: 1, alignSelf: 'stretch', justifyContent: 'flex-end', alignItems: 'flex-end'}]}
           >
             {
-              marker?.msrc ? (
-                <TouchableOpacity  
-                  onPress={() =>
-                    alert("kenny")
-                  }
-                  onLongPress={() => alert("delete!!!")}
+              __marker?.msrc ? (
+                <TouchableOpacity
+                  onLongPress={() => del()}
+                  onPress={() => show()}
                 >
                   <Image
-                    source={markers[marker.msrc]}
+                    source={markers[__marker?.msrc]}
                     style={[styles.marker, {width: 150, height: 150}]}
                   ></Image>
                 </TouchableOpacity>
@@ -106,11 +164,44 @@ export default function Description({ navigation, route }) {
           </ImageBackground>
         </View>
         <View style={[styles.containerText, styles.bgColor, styles.mt16]}>
-          <Text>{ data.description }</Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 5}}>
+            <View>
+              <Text style={styles.header}>{data.ename}({data.sname})</Text>
+              <Text style={styles.header}>{data.name}</Text>
+            </View>
+            <FAB
+              style={{ position: 'absolute', top: 0, right: 0}}
+              icon={{ name: 'map', color: 'white' }}
+              size="small"
+              color="#DF2E38"
+              onPress={() => Linking.openURL(data.link)}
+            />
+          </View>
+          {/* <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 5}}>
+            <Text style={{marginRight: 'auto', fontWeight: 'bold', fontSize: 18}}>Description</Text>
+            <FAB
+              style={{marginLeft: 'auto'}}
+              icon={{ name: 'map', color: 'white' }}
+              size="small"
+              color="#DF2E38"
+              onPress={() => Linking.openURL(data.link)}
+            />
+          </View> */}
+           <Divider width={1} color="white" style={{marginVertical: 5,}}></Divider>
+          <View>
+            <Text style={{marginRight: 'auto', fontWeight: 'bold', fontSize: 14, color: 'white'}}>Description</Text>
+            <Text style={{color: 'white'}}>{ data.description }</Text>
+          </View>
+          {/* <Text>{ data.description }</Text> */}
         </View>
+        <Divider style={{marginTop: 10}}></Divider>
         <View style={[styles.containerInput, styles.bgColor, styles.mt16]}>
           <Input
             label="Note"
+            labelStyle={{color: 'white'}}
+            inputContainerStyle={{borderColor: 'white', marginBottom: 0}}
+            errorStyle={{display: 'none',}}
+            containerStyle={{marginBottom: 10}}
             onChangeText={newText  => setText(newText)}
             value={text}
             onSubmitEditing={() => { 
@@ -157,14 +248,14 @@ export default function Description({ navigation, route }) {
               
             }}
             onPress={() => {
-              marker ? updateDoc() : addDoc()
+              __marker ? updateDoc() : addDoc()
             }}
           />
         </View>
       </ScrollView>
       <FAB 
         onPress={() =>
-          navigation.navigate('Marker', { fid: fid, building: data})
+          navigation.navigate('Marker', { fid: fid, building: {...data, marker: __marker}})
         }
         color="#BA94D1"
         placement="left"
@@ -186,7 +277,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#BFACE2',
     },
     mt16: {
-      marginTop: 16,
+      marginTop: 12,
     },
     containerImage: {
       borderRadius: 6,
@@ -199,15 +290,26 @@ const styles = StyleSheet.create({
       padding: 16,
       borderRadius: 6,
       width: '100%',
-      alignItems: 'center',
+      // alignItems: 'center',
     },
     containerInput: {
       padding: 7,
       borderRadius: 7,
+      marginBottom: 5,
     },
     marker: {
       // position: 'absolute',
       // bottom: 0,
       // left: "65%",
     },
+    fColor: {
+      color: 'white',
+    },
+    header: {
+      color: 'white',
+      marginRight: 'auto',
+      fontWeight: 'bold',
+      fontSize: 16
+    }
+    
   });

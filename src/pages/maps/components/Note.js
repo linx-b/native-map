@@ -5,7 +5,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useEffect, useState } from 'react';
 
 export default function Note({index, body, hendler}) {
-  console.log("body =>", body)
   const [text, setText] = useState(body)
   const [edit, setEdit] = useState(false)
   // useEffect(() => setText(body), [body])
@@ -88,8 +87,8 @@ export default function Note({index, body, hendler}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#635985',
-    marginVertical: 10,
+    backgroundColor: '#BFACE2',
+    marginVertical: 5,
     // alignItems: 'center',
     // justifyContent: 'center',
   },

@@ -11,6 +11,7 @@ import {
 import db from 'database/firebase'
 
 import Card from 'components/Card'
+import NotFound from 'components/404'
 import __building from 'util/building'
 
 function update(fid, bid) {
@@ -43,10 +44,9 @@ export default function About({navigation, route}) {
       })},
       {
         text: 'Cancel',
-        // onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-    ]);
+    ])
     // update(fid, bid).then(() => {
     //   Alert.alert('Update Successful')
     // })
@@ -57,7 +57,6 @@ export default function About({navigation, route}) {
       getDocs(collection(db, 'maps', fid , 'buildings')).then((querySnapshot) => {
         const _buildings = []
         querySnapshot.forEach((building) => {
-          console.log('building =>', building.id, building.data())
           if(building.data().del) {
             return
           }
@@ -71,6 +70,10 @@ export default function About({navigation, route}) {
     })
     return unsubscribe
   }, [navigation])
+
+  if(!buildings.length) {
+    return (<NotFound image={require('src/images/not_found.png')}></NotFound>)
+  }
 
   return (
     <View style={styles.container}>

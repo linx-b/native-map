@@ -20,30 +20,14 @@ export default function SubMapScreen({navigation, route}) {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       const uid = await AsyncStorage.getItem('uid') 
-      const buildings = await getDocs(collection(db, 'maps', fid , 'buildings'))
+      const buildings = await getDocs(
+        query(
+          collection(db, 'maps', fid , 'buildings'),
+          where('del', '==', false)
+        )
+      )
       const _query = query(collection(db, 'mapping'), where('fid', '==', fid), where('uid', '==', uid))
       const markers = await getDocs(_query)
-
-      // const _data = []
-
-      // buildings.forEach(b => {
-      //   let marker = null
-      //   markers.forEach(m => {
-      //     const { bid } = m.data()
-      //     marker = marker || (bid === b.id && { id: m.id, ...m.data()})
-      //   })
-
-      //   const d = {
-      //     id: b.id,
-      //     ...b.data(),
-      //     marker: marker || null,
-      //   }
-        
-      //   _data.push(d)
-
-      // })
-
-      // setData(_data)
 
       const _d =  buildings.docs.map(building => {
         const marker = markers.docs.find(marker => marker.data().bid === building.id )
@@ -56,22 +40,6 @@ export default function SubMapScreen({navigation, route}) {
 
       setData(_d)
       
-      // await _bs.then(querySnapshot => {
-      //   querySnapshot.forEach((doc) => {
-      //     console.log(doc.id, '=>', doc.data())
-      //     bs.push({id: doc.id, ...doc.data()})
-      //     setBuildings(bs)
-      //   })
-      // })
-      // await _marker.then(querySnapshot => {
-      //   console.log('marker')
-      //   querySnapshot.forEach((doc) => {
-      //     console.log(doc.id, '=>', doc.data())
-      //     mks.push({...doc.data()})
-      //     setMarkers(mks)
-      //   })
-      // })
-      
     })
     return unsubscribe
   }, [navigation])
@@ -79,7 +47,7 @@ export default function SubMapScreen({navigation, route}) {
   if(!available) {
     return (
       <>
-        <NotFound></NotFound>
+        <NotFound image={require('src/images/404.png')}></NotFound>
       </>
     )
   }

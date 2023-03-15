@@ -7,7 +7,6 @@ import _buildings from 'util/building'
 import _markers  from 'util/markers'
 
 const SubMap = ({navigation, fid, data}) => {
-  console.log("data =>", data)
   const handle = ({ nativeEvent }) => {
     console.log(nativeEvent.locationX, nativeEvent.locationY)
   }
@@ -65,14 +64,13 @@ const SubMap = ({navigation, fid, data}) => {
             {
               data.map((building, index) => {
                 const { marker } = building
-
-                return <G key={index} onPress={() =>navigation.navigate('Detail', {fid: fid, data: building})}>
+                return <G key={index + building?.id + marker?.msrc} onPress={() => navigation.navigate('Detail', {fid: fid, data: building})}>
                   <Image
                     // onPress={() => alert('Press on Building')}
                     x={building.x}
                     y={building.y}
-                    width="200"
-                    height="200"
+                    width="350"
+                    height="350"
                     // preserveAspectRatio="xMidYMid slice"
                     href={_buildings[building.src]}
                   ></Image>
@@ -80,8 +78,8 @@ const SubMap = ({navigation, fid, data}) => {
                       // onPress={() => alert('Press on kenny')}
                       x={building.mx}
                       y={building.my}
-                      width="200"
-                      height="200"
+                      width="350"
+                      height="350"
                       // preserveAspectRatio="xMidYMid slice"
                       href={_markers[marker?.msrc]}
                     ></Image>
